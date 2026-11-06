@@ -19,7 +19,7 @@ cmake_print_variables(EXPAT_FOUND
                       EXPAT_INCLUDE_DIRS
                       EXPAT_LIBRARIES
                       EXPAT_USE_STATIC_LIBS)
-cmake_print_properties(TARGETS EXPAT::EXPAT
-                       PROPERTIES LOCATION
-                                  INTERFACE_INCLUDE_DIRECTORIES)
+if(TARGET EXPAT::EXPAT)
+    message(STATUS "EXPAT::EXPAT is available")
+endif()
 

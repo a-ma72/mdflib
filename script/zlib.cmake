@@ -19,6 +19,6 @@ cmake_print_variables(ZLIB_FOUND
                       ZLIB_INCLUDE_DIRS
                       ZLIB_LIBRARIES
                       ZLIB_USE_STATIC_LIBS)
-cmake_print_properties(TARGETS ZLIB::ZLIB
-        PROPERTIES LOCATION
-        INTERFACE_INCLUDE_DIRECTORIES)
+if(TARGET ZLIB::ZLIB)
+    message(STATUS "ZLIB::ZLIB is available")
+endif()
