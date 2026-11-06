@@ -23,6 +23,14 @@ class ReadCache {
 
   bool ParseRecord();
   bool ParseRangeRecord(DgRange& range);
+
+  /** \brief Seek to the first sample of a sorted, fixed-stride window.
+   *
+   * No effect unless the group has no record id, exactly one non-VLSD
+   * channel group, and the range starts after the first sample. Whole
+   * data blocks before the landing offset are not inflated.
+   */
+  void SkipSortedPrefix(const DgRange& range);
   bool ParseVlsdCgData();
 
   /** \brief Read in all SD data.
@@ -80,11 +88,14 @@ class ReadCache {
   std::set<uint64_t> offset_filter_;
   std::function<void(uint64_t, const std::vector<uint8_t>&)> callback_;
 
+  std::vector<uint8_t> record_buffer_;
+
   uint64_t ParseRecordId();
   bool GetNextByte(uint8_t& input);
   void GetArray(std::vector<uint8_t>& buffer);
   void SkipBytes(size_t nof_skip);
    bool SkipByte();
+  std::vector<uint8_t>& TakeRecord(size_t nbytes);
 };
 
 

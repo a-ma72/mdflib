@@ -431,6 +431,7 @@ void Dg4Block::ReadRangeData(std::streambuf& buffer, DgRange& range) {
     }
   }
   ReadCache read_cache(this, buffer);
+  read_cache.SkipSortedPrefix(range);
   while (read_cache.ParseRangeRecord(range)) {
   }
 

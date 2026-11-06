@@ -5,6 +5,7 @@
 
 #include "readcache.h"
 #include <iostream>
+#include <limits>
 
 #include "mdf/mdflogstream.h"
 
@@ -66,7 +67,7 @@ bool ReadCache::ParseRecord() {
     if (channel_group->Flags() & CgFlag::VlsdChannel) {
       // This is normally used for the string,
       // and the CG block only includes one signal
-      std::vector<uint8_t> temp(4, 0);
+      auto& temp = TakeRecord(4);
       GetArray(temp);
       const LittleBuffer<uint32_t> length(temp, 0);
 
@@ -77,7 +78,7 @@ bool ReadCache::ParseRecord() {
           channel_group->IncrementSample();
         }
       } else {
-        std::vector<uint8_t> record(length.value(), 0);
+        auto& record = TakeRecord(length.value());
         GetArray(record);
         const size_t sample = channel_group->Sample();
         if (sample < channel_group->NofSamples()) {
@@ -98,7 +99,7 @@ bool ReadCache::ParseRecord() {
           channel_group->IncrementSample();
         }
       } else {
-        std::vector<uint8_t> record(record_size, 0);
+        auto& record = TakeRecord(record_size);
         GetArray(record);
         const size_t sample = channel_group->Sample();
         if (sample < channel_group->NofSamples()) {
@@ -142,7 +143,7 @@ bool ReadCache::ParseRangeRecord(DgRange& range) {
     if (channel_group->Flags() & CgFlag::VlsdChannel) {
       // This is normally used for string,
       // and the CG block only includes one signal
-      std::vector<uint8_t> temp(4, 0);
+      auto& temp = TakeRecord(4);
       GetArray(temp);
       const LittleBuffer<uint32_t> length(temp, 0);
       if (!cg_range->IsUsed() ||
@@ -164,7 +165,7 @@ bool ReadCache::ParseRangeRecord(DgRange& range) {
           channel_group->IncrementSample();
         }
       } else {
-        std::vector<uint8_t> record(length.value(), 0);
+        auto& record = TakeRecord(length.value());
         GetArray(record);
         if (sample < channel_group->NofSamples()) {
           continue_reading = dg4_block_->NotifySampleObservers(sample,
@@ -195,7 +196,7 @@ bool ReadCache::ParseRangeRecord(DgRange& range) {
           channel_group->IncrementSample();
         }
       } else {
-        std::vector<uint8_t> record(record_size, 0);
+        auto& record = TakeRecord(record_size);
         GetArray(record);
         if (sample < channel_group->NofSamples()) {
           continue_reading = dg4_block_->NotifySampleObservers(sample,
@@ -596,6 +597,73 @@ void ReadCache::SetOffsetFilter(const std::vector<uint64_t> &offset_list) {
 
 void ReadCache::SetCallback(const std::function<void(uint64_t, const std::vector<uint8_t> &)> &callback) {
   callback_ = callback;
+}
+
+std::vector<uint8_t>& ReadCache::TakeRecord(size_t nbytes) {
+  if (record_buffer_.size() != nbytes) {
+    record_buffer_.resize(nbytes);
+  }
+  return record_buffer_;
+}
+
+void ReadCache::SkipSortedPrefix(const DgRange& range) {
+  if (dg4_block_ == nullptr || dg4_block_->RecordIdSize() != 0) {
+    return;
+  }
+  if (range.MinSample() <= 1) {
+    return;
+  }
+
+  const Cg4Block* group = nullptr;
+  size_t non_vlsd = 0;
+  for (const auto& channel_group : dg4_block_->Cg4()) {
+    if (!channel_group) {
+      continue;
+    }
+    if ((channel_group->Flags() & CgFlag::VlsdChannel) != 0) {
+      continue;
+    }
+    ++non_vlsd;
+    group = channel_group.get();
+  }
+  if (non_vlsd != 1 || group == nullptr) {
+    return;
+  }
+  if (!range.IsUsed(group->RecordId())) {
+    return;
+  }
+
+  const uint64_t stride = static_cast<uint64_t>(group->NofDataBytes())
+                           + static_cast<uint64_t>(group->NofInvalidBytes());
+  if (stride == 0 || max_data_count_ < stride) {
+    return;
+  }
+
+  uint64_t nskip = static_cast<uint64_t>(range.MinSample() - 1);
+  const uint64_t max_records = max_data_count_ / stride;
+  if (nskip > max_records) {
+    nskip = max_records;
+  }
+  if (nskip > group->NofSamples()) {
+    nskip = group->NofSamples();
+  }
+  if (nskip == 0) {
+    return;
+  }
+
+  const uint64_t chunk_max = std::numeric_limits<size_t>::max() / stride;
+  uint64_t left = nskip;
+  while (left > 0) {
+    uint64_t chunk = left;
+    if (chunk > chunk_max) {
+      chunk = chunk_max;
+    }
+    SkipBytes(static_cast<size_t>(chunk * stride));
+    left -= chunk;
+  }
+  for (uint64_t sample = 0; sample < nskip; ++sample) {
+    group->IncrementSample();
+  }
 }
 
 
