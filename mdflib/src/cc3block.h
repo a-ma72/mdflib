@@ -37,6 +37,9 @@ class Cc3Block : public MdfBlock, public IChannelConversion {
 
   void CopyFrom(const IChannelConversion& source) override;
 
+  /// File CC type (0 linear, 1 tabular, 65535 identity, …), not the remapped enum.
+  [[nodiscard]] uint16_t StoredType() const { return conversion_type_; }
+
  protected:
   bool ConvertValueToText(double channel_value,
                           std::string& eng_value) const override;

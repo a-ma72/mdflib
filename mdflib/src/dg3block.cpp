@@ -262,7 +262,30 @@ void Dg3Block::ParseRangeDataRecords(std::streambuf& buffer, uint64_t nof_data_b
     }
   }
 
-  for (uint64_t count = 0; count < nof_data_bytes; /* No ++count here*/) {
+  uint64_t count_start = 0;
+  if (nof_record_id_ == 0 && cg_list_.size() == 1 && cg_list_[0]) {
+    Cg3Block* channel_group = cg_list_[0].get();
+    const uint64_t stride = channel_group->RecordSize();
+    if (stride > 0 && range.MinSample() > 1) {
+      uint64_t nskip = static_cast<uint64_t>(range.MinSample() - 1);
+      if (nskip > channel_group->NofSamples()) {
+        nskip = channel_group->NofSamples();
+      }
+      if (nskip > nof_data_bytes / stride) {
+        nskip = nof_data_bytes / stride;
+      }
+      const uint64_t bytes = nskip * stride;
+      if (bytes > 0) {
+        StepFilePosition(buffer, bytes);
+        for (uint64_t sample = 0; sample < nskip; ++sample) {
+          channel_group->IncrementSample();
+        }
+        count_start = bytes;
+      }
+    }
+  }
+
+  for (uint64_t count = count_start; count < nof_data_bytes; /* No ++count here*/) {
     // 1. Read Record ID
     uint8_t record_id = 0;
     if (nof_record_id_ == 1 || nof_record_id_ == 2) {

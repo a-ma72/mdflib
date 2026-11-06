@@ -14,6 +14,13 @@ class Ce3Block : public MdfBlock {
  public:
   uint64_t Read(std::streambuf& buffer) override;
   void GetBlockProperty(BlockPropertyList& dest) const override;
+
+  [[nodiscard]] uint16_t Type() const { return type_; }
+  [[nodiscard]] const std::string& Message() const { return message_; }
+  [[nodiscard]] const std::string& Sender() const { return sender_; }
+  [[nodiscard]] const std::string& Description() const { return description_; }
+  [[nodiscard]] const std::string& Ecu() const { return ecu_; }
+
  private:
   uint16_t type_ = 0;
 

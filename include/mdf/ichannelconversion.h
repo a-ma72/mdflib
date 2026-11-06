@@ -288,6 +288,16 @@ class IChannelConversion : public IBlock {
 
   virtual void CopyFrom(const IChannelConversion& source);
 
+  /** \brief MDF 3 value-to-text entries. Empty for MDF 4. */
+  [[nodiscard]] const std::vector<TextConversion>& TextConversions() const {
+    return text_conversion_list_;
+  }
+
+  /** \brief MDF 3 value-range-to-text entries. Empty for MDF 4. */
+  [[nodiscard]] const std::vector<TextRangeConversion>& TextRangeConversions() const {
+    return text_range_conversion_list_;
+  }
+
  protected:
   uint16_t nof_values_ = 0; ///< Number of parameter values (MDF3).
 

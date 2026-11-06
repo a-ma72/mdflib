@@ -256,9 +256,12 @@ bool Cg3Block::PrepareForWriting() {
 
 uint64_t Cg3Block::ReadDataRecord(std::streambuf& buffer,
                                 const IDataGroup &notifier) const {
-  // Normal fixed length records
-  std::size_t record_size = size_of_data_record_;
-  std::vector<uint8_t> record(record_size, 0);
+  // Normal fixed length records. The buffer is reused across records.
+  const std::size_t record_size = size_of_data_record_;
+  std::vector<uint8_t>& record = SampleBuffer();
+  if (record.size() != record_size) {
+    record.resize(record_size);
+  }
   uint64_t count =
       buffer.sgetn(reinterpret_cast<char *>(record.data()), record.size());
   uint64_t sample = Sample();
@@ -297,9 +300,11 @@ uint64_t Cg3Block::ReadRangeDataRecord(std::streambuf& buffer,
       cg_range->IsUsed(false);
     }
   } else {
-    // Normal fixed length records
-
-    std::vector<uint8_t> record(record_size, 0);
+    // Normal fixed length records. The buffer is reused across records.
+    std::vector<uint8_t>& record = SampleBuffer();
+    if (record.size() != record_size) {
+      record.resize(record_size);
+    }
 
     count = buffer.sgetn(
         reinterpret_cast<char*>(record.data()), record.size());
