@@ -291,8 +291,14 @@ void Dg3Block::ParseRangeDataRecords(std::streambuf& buffer, uint64_t nof_data_b
     if (nof_record_id_ == 1 || nof_record_id_ == 2) {
       count += ReadNumber(buffer, record_id);
     }
-    const auto *cg3 = FindCgRecordId(record_id);
-    const auto* cg_range = range.GetCgRange(record_id);
+    // A sorted group stores no record id in the data, but the CG block can
+    // still carry one. The range map is keyed by that id.
+    uint64_t lookup_id = record_id;
+    if (nof_record_id_ == 0 && cg_list_.size() == 1 && cg_list_[0]) {
+      lookup_id = cg_list_[0]->RecordId();
+    }
+    const auto *cg3 = FindCgRecordId(lookup_id);
+    const auto* cg_range = range.GetCgRange(lookup_id);
     if (cg3 == nullptr || cg_range == nullptr) {
       break;
     }
