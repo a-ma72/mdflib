@@ -4,11 +4,11 @@
  */
 
 #include "mdf/csvwriter.h"
-#include <filesystem>
+#include "filepath.h"
 #include <iostream>
 #include <mdf/mdflogstream.h>
 
-using namespace std::filesystem;
+using namespace fs;
 
 namespace mdf {
 
@@ -117,7 +117,7 @@ void CsvWriter::Convert(ChannelObserverList& observer_list) {
       file_ << std::endl;
     }
     file_.close();
-    std::filesystem::rename(temp_filename_, dest_filename_);
+    rename(temp_filename_, dest_filename_);
   } catch (const std::exception& err) {
     MDF_ERROR() << "File save error. Error: " << err.what();
   }

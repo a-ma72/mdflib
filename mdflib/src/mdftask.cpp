@@ -5,7 +5,7 @@
 
 #include "mdf/mdftask.h"
 
-#include <filesystem>
+#include "filepath.h"
 #include <sstream>
 
 #include "mdf/fhcomment.h"
@@ -17,7 +17,7 @@
 
 #include "sortingconfigadapter.h"
 
-using namespace std::filesystem;
+using namespace fs;
 
 namespace mdf {
 
@@ -207,7 +207,7 @@ void MdfTask::CopyTempFile() const {
     }
     if (exists(dest)) {
       if (OverwriteFile()) {
-        copy_file(temp, dest, std::filesystem::copy_options::overwrite_existing);
+        copy_file(temp, dest, copy_options::overwrite_existing);
       }
     } else {
       copy_file(temp, dest);

@@ -6,7 +6,8 @@
 #include "sortingtask.h"
 
 #include <exception>
-#include <filesystem>
+
+#include "filepath.h"
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -24,7 +25,7 @@
 #include "mdf/fhcomment.h"
 
 
-using namespace std::filesystem;
+using namespace fs;
 
 namespace mdf {
 

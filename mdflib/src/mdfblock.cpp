@@ -18,13 +18,7 @@
 #include "mdf/mdflogstream.h"
 #include "tx3block.h"
 
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
+#include "filepath.h"
 
 using namespace fs;
 using namespace std::chrono_literals;
@@ -330,7 +324,7 @@ bool OpenMdfFile(std::streambuf& buffer, const std::wstring &filename,
         file_buffer.close();
       }
       fname = filename;
-      file = file_buffer.open(fname, mode);
+      file = MdfOpenFileBuf(file_buffer, fname, mode);
       if (file == nullptr) {
         if (!exists(fname)) {
           MDF_ERROR() << "The file doesn't exist. File: " << fname;

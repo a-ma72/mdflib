@@ -9,13 +9,7 @@
 #include "at4block.h"
 #include "mdf/mdflogstream.h"
 
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
+#include "filepath.h"
 
 using namespace fs;
 
